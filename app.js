@@ -10,18 +10,25 @@ const app = express();
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 
+app.get("/", (req, res, next) => {
+    User.find({}).select("_id email password").exec((err, user) => {
+        if(err)
+            return res.status(403).send({error: err});
+        if(!user)
+            return res.status(403).send({error: "User not found"});
+        return res.status(200).send(user);
+    });
+});
+
 app.get("/:id", (req, res, next) => {
     const givenId = req.params.id;
     if(!givenId)
         return res.status(422).send("Missing some data");
 
-    User.findById(givenId).select("_id email password")
-    .exec((err, user) => {
+    User.findById(givenId, (err, product) => {
         if(err)
-            return res.status(403).send({error: err});
-        if(!user)
-            return res.status(403).send({error: "User not found"});
-        return res.status(200).send({user});
+            return next(err);
+        res.send(product);
     });
 });
 
@@ -34,12 +41,32 @@ app.post("/", (req, res, next) => {
         password: req.body.password
     });
 
-    user.save(err => {
-        if(err)
-            return res.status(403).send({"error": err});
-        return res.status(201).send({
-            user: user
-        });
+    try {
+        user.save();
+        return res.status(201).json({user : user});
+    } catch(error) {
+        return res.status(403).send({"error": error})
+    }
+});
+
+app.put("/:id", (req, res, next) => {
+    const givenId = req.params.id;
+    if(!givenId)
+        return res.status(422).send("Missing some data");
+    User.findByIdAndUpdate(givenId, {$set: req.body}, (err, product) => {
+        if (err) return next(err);
+           res.send('Product udpated.');
+    });
+});
+
+app.delete("/:id", (req, res, next) => {
+    const givenId = req.params.id;
+    if(!givenId)
+        return res.status(422).send("Missing some data");
+    User.findByIdAndRemove(givenId,(error) => {
+        if (err)
+            return next(err);
+        res.send('Deleted successfully!');
     });
 });
 
