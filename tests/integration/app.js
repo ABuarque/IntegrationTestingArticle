@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import User from "../../models/User";
 
 describe("Route users", () => {
 
@@ -14,15 +13,6 @@ describe("Route users", () => {
     beforeEach(done => {
         mongoose.connect("mongodb://animal505:vaca505@ds123919.mlab.com:23919/article-in-test");
         done();
-    });
-
-    describe("Route GET /users", () => {
-        it("should get an empty list of users", done => {
-            request.get("/users").end((err, res) => {
-                expect(res.body).to.be.eql([]);
-                done(err);
-            });
-        });
     });
 
     describe("Route POST /users", () => {
@@ -56,6 +46,15 @@ describe("Route users", () => {
             .expect(200)
             .end((err, res) => {
                 expect(res.body.history).to.not.be.eql(null);
+                done(err);
+            });
+        });
+    });
+
+    describe("Route GET /users", () => {
+        it("should not get an empty list of users", done => {
+            request.get("/users").end((err, res) => {
+                expect(res.body).to.not.be.eql([]);
                 done(err);
             });
         });
