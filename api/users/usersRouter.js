@@ -7,7 +7,7 @@ router.get("/", (req, res, next) => {
     User.find({}).select("_id name email password").exec((err, user) => {
         if(err)
             return res.status(403).send({error: err});
-            
+
         if(!user)
             return res.status(403).send({error: "User not found"});
         return res.status(200).json(user);
@@ -17,7 +17,7 @@ router.get("/", (req, res, next) => {
 router.get("/:id", (req, res, next) => {
     const givenId = req.params.id;
     if(!givenId)
-        return res.status(422).send("Missing some data");
+        return res.status(422).send("Missing data");
 
     User.findById(givenId, (err, product) => {
         if(err)
@@ -28,7 +28,7 @@ router.get("/:id", (req, res, next) => {
 
 router.post("/", (req, res, next) => {
     if( !req.body.password || !req.body.email)
-        return res.status(422).send("Missing some data");
+        return res.status(422).send("Missing data");
 
     const user = new User({
         name: req.body.name,
@@ -47,7 +47,7 @@ router.post("/", (req, res, next) => {
 router.put("/:id", (req, res, next) => {
     const givenId = req.params.id;
     if(!givenId)
-        return res.status(422).send("Missing some data");
+        return res.status(422).send("Missing data");
 
     User.findByIdAndUpdate(givenId, {$set: req.body}, (err, user) => {
         if (err)
@@ -59,19 +59,33 @@ router.put("/:id", (req, res, next) => {
 router.delete("/:id", (req, res, next) => {
     const givenId = req.params.id;
     if(!givenId)
-        return res.status(422).send("Missing some data");
+        return res.status(422).send("Missing data");
 
     User.findByIdAndRemove(givenId,(error) => {
         if (err)
             return next(err);
-        res.send("Deleted successfully!");
+        res.send("Deleted!");
     });
 });
+
+/*
+{
+    jobInfo: {
+        position: CT,
+        company
+    },
+    bands: {
+        {
+
+        }
+    }
+}
+*/
 
 router.post("/:id/history", async (req, res, next) => {
     const givenId = req.params.id;
     if(!givenId)
-        return res.status(422).send("Missing some data");
+        return res.status(422).send("Missing data");
 
     User.findById(givenId, (error, user) => {
         if(error)
@@ -80,14 +94,20 @@ router.post("/:id/history", async (req, res, next) => {
         if(!user)
             return res.status(403).send({error: "User not found"});
 
+        let userHistory = "";
+        try {
+            userHistory = getUserHistory(user, req.body);
+        } catch(error) {
+            return res.status(422).send("Cold not handle request");
+        }
         return res.status(200).json({
-            history: getUserHistory(user, req.body)
+                history: userHistory
         });
     });
 });
 
 const getUserHistory = (user, requestBody) => {
-    return `${user.name} is ${requestBody.currentJob} at ${requestBody.currentCompany}, his favourite color is ${user.favouriteColor} and his favourite bands are ${requestBody.bands[0]} and ${requestBody.bands[1]}`
+    return `${user.name} is ${requestBody.jobInfo.job} at ${requestBody.jobInfo.company}, his favourite color is ${user.favouriteColor} and his favourite bands are ${requestBody.favouriteBand1} and ${requestBody.favouriteBand2}`
 }
 
 export default router;
